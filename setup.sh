@@ -32,6 +32,10 @@ apt install -y libc6:i386 libstdc++6:i386 libncurses6:i386 zlib1g:i386 libbz2-1.
 apt update
 apt install -y libgtk2.0-0t64 libxtst6 libxrender1 libxrandr2 libxi6
 
+# -------- Install paquets pour esp idf --------
+apt update
+apt install -y wget flex bison gperf python3 python3-pip python3-venv cmake ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0
+
 # Créer des liens symboliques si nécessaires
 for lib in ncurses tinfo; do
     lib6_path="/usr/lib/i386-linux-gnu/lib${lib}.so.6"
@@ -146,3 +150,39 @@ if echo "$GCC_OUT" | grep -q "arm-none-eabi-gcc"; then
 else
     echo "❌ GCC n'a pas été trouvé ou ne fonctionne pas."
 fi
+
+# -------- 8️⃣ Installation ESP-IDF v5.2.3 --------
+echo "📥 Installation de l'ESP-IDF v5.2.3..."
+
+USER_HOME=$(eval echo "~$SUDO_USER")
+ESP_DIR="$USER_HOME/esp"
+ESP_IDF_DIR="$ESP_DIR/esp-idf"
+
+# Créer dossier esp
+mkdir -p "$ESP_DIR"
+chown -R $SUDO_USER:$SUDO_USER "$ESP_DIR"
+
+if [[ ! -d "$ESP_IDF_DIR" ]]; then
+    echo "🌐 Clonage du dépôt ESP-IDF v5.2.3..."
+    su - $SUDO_USER -c "git clone -b v5.2.3 --recursive https://github.com/espressif/esp-idf.git '$ESP_IDF_DIR'"
+else
+    echo "ℹ️ Le dépôt esp-idf existe déjà, mise à jour..."
+    su - $SUDO_USER -c "cd '$ESP_IDF_DIR' && git fetch --all && git checkout v5.2.3 && git submodule update --init --recursive"
+fi
+
+# Installer les dépendances ESP32
+echo "⚙️ Exécution du script d'installation pour ESP32..."
+su - $SUDO_USER -c "cd '$ESP_IDF_DIR' && ./install.sh all"
+
+# Ajouter alias dans bashrc
+BASHRC_ALIAS="alias get_idf='. \$HOME/esp/esp-idf/export.sh'"
+if ! grep -Fxq "$BASHRC_ALIAS" /home/$SUDO_USER/.bashrc; then
+    echo "📌 Ajout de l'alias get_idf dans .bashrc"
+    echo "$BASHRC_ALIAS" >> /home/$SUDO_USER/.bashrc
+fi
+
+su - $SUDO_USER -c "source ~/.bashrc"
+
+echo "✅ ESP-IDF installé et alias ajouté. Vous pouvez maintenant utilisez 'get_idf' pour activer l'environnement ESP-IDF."
+echo "✅ Installation complète terminée !"
+echo "➡️ Ouvrez un nouveau terminal ou 'source ~/.bashrc' pour commencer à utiliser GCC, SW4STM32 et ESP-IDF (En utilisant 'get_idf' dans un terminal pour charger l'environnement)."
