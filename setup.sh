@@ -21,7 +21,7 @@ fi
 # -------- 2️⃣ Installer paquets nécessaires --------
 echo "📦 Installation des paquets système..."
 apt update
-apt install -y openocd tmux git hexcurse telnet wget bzip2
+apt install -y openocd tmux git hexcurse telnet wget bzip2 picocom minicom
 
 # -------- 3️⃣ Support 32-bit pour gcc 5.4 --------
 dpkg --add-architecture i386 || true
